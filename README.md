@@ -12,5 +12,3 @@ Some of the problems solved by the KubeScale auto-scaler are:
 
 The high level algorithm behind KubeScale is the following: 
 ![KubeScale algorithm](KubeScale_algo.jpg)
-and
-![KubeScale algorithm](KubeScale_algo2.jpg)
