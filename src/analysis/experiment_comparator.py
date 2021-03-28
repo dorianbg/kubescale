@@ -4,14 +4,12 @@ from enum import Enum
 import os
 prom_url = "http://193.61.36.69:31000/"
 import matplotlib.pyplot as plt
-import matplotlib.dates as md
-from matplotlib.dates import DateFormatter, MinuteLocator
+from matplotlib.dates import DateFormatter
 import pandas as pd
 
 plt.rcParams["figure.figsize"] = (20, 12)
 plt.rcParams["font.size"] = "10"
 plt.rcParams['axes.xmargin'] = 0
-
 
 
 class Queries(Enum):
@@ -72,8 +70,8 @@ class ExperimentRun:
                 result[query_name] = pd.read_csv(file_path, index_col=0, squeeze=True, infer_datetime_format=True, parse_dates=[0])
             else:
                 result_series = PrometheusUtil.app_metrics_query_helper(url=prom_url, query=query, metric_name="",
-                                        pods=[], start_time=start_time, end_time=end_time, step=10,
-                                                                    aggregate_per_pod=False).metrics
+                                                                        pods=[], start_time=start_time, end_time=end_time, step=10,
+                                                                        per_pod=False).metrics
                 result[query_name] = result_series
                 if not os.path.exists(folder_path):
                     os.makedirs(folder_path, exist_ok=True)
@@ -261,4 +259,3 @@ if __name__ == '__main__':
 
     main(exp_name=ExperimentalRuns.SPIKY_CPU)
     main(exp_name=ExperimentalRuns.SPIKY_RPS)
-

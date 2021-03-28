@@ -41,15 +41,15 @@ class PrometheusUtil:
     @staticmethod
     def app_metrics_query_helper(url: str, query:str, metric_name:str, pods: List[PodWrapper],
                                  start_time: datetime.datetime, end_time: datetime.datetime,
-                                 step: float, aggregate_per_pod=False,  by_keyword:str = "") -> Union[Dict[PodWrapper,
-                                                                                     MetricWrapper],MetricWrapper]:
+                                 step: float, per_pod=False, by_keyword:str = "") -> Union[Dict[PodWrapper,
+                                                                                                MetricWrapper], MetricWrapper]:
         # queries prometheus using PromQL queries
         # returns a dataframe
         logging.debug("Executing query {}".format(query))
         data: List[Dict] = PrometheusUtil.query_time_range(url=url, query=query, start_time=start_time,
                                                            end_time=end_time, step=step)
         # unlikely that this will be used, not too useful overall
-        if aggregate_per_pod:
+        if per_pod:
             # now tie back the data to PodWrapper and return the MetricWrapper objects
             results: Dict[PodWrapper, MetricWrapper] = {}
             for i in data:
@@ -67,9 +67,6 @@ class PrometheusUtil:
         else:
             ts_data = pd.Series(data=[float(i[1]) for i in data[0]["values"]],
                                 index=[datetime.datetime.utcfromtimestamp(i[0]) for i in data[0]["values"]])
-            # try:
-            #     ts_data.index.freq = str(step) + 'S'
-            #
             return MetricWrapper(metric_name=metric_name, metrics=ts_data)
 
     @staticmethod

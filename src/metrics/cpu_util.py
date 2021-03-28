@@ -16,13 +16,11 @@ class CpuUsageTotal(MetricSource):
                 count(count by (pod) (eagle_pod_container_resource_usage_cpu_cores{{ pod=~"{pod_name}", container!="POD", container=~"{container_name}", phase="Running" }}))
             )
         """
-        # generic
         self.prom_url: str = prom_url
         self.step_size_secs: int  = step_size_secs
         self.aggregate_per_pod: bool = False
 
-    def get_data(self, pods: List[PodWrapper], start_time: datetime.datetime, end_time: datetime.datetime,
-                 ) \
+    def get_data(self, pods: List[PodWrapper], start_time: datetime.datetime, end_time: datetime.datetime) \
             -> Optional[Union[MetricWrapper, Dict[PodWrapper,MetricWrapper]]]:
         if len(pods) == 0:
             return None
@@ -34,4 +32,4 @@ class CpuUsageTotal(MetricSource):
                                                            metric_name=self.metric_name, pods=pods,
                                                            start_time=start_time, end_time=end_time,
                                                            step=self.step_size_secs,
-                                                           aggregate_per_pod=self.aggregate_per_pod)
+                                                           per_pod=self.aggregate_per_pod)
