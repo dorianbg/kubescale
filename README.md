@@ -1,6 +1,7 @@
 KubeScale - A Hybrid Kubernetes Auto-Scaler
 ------------------
 
+Contents:
 - [Introduction](#intro)
 - [Why KubeScale instead of the Kubernetes HPA?](#hpa)
 - [Alerts of scaling decisions with explanation](#prediction-alerts)
