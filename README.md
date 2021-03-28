@@ -3,10 +3,11 @@ KubeScale
 
 1. [Introduction](#intro)
 2. [Why KubeScale instead of the Kubernetes HPA?](#hpa)
-3. [Third Example](#third-example)
-4. [Fourth Example](#fourth-examplehttpwwwfourthexamplecom)
+3. [High level KubeScale algorithm](#high-level)
+4. [Alerts of scaling decisions with explanation](#prediction-alerts) 
+5. [Configuration explained](#config)
 
-###Introduction <a name="intro"></a>
+### Introduction <a name="intro"></a>
 
 KubeScale is a hybrid auto-scaler primarily focused on horizontally scaling containerised applications deployed on Kubernetes.
 It automatically scales deployments on Kubernetes by <b>predicting</b> the future workload and adjusting the resources beforehand.
@@ -32,18 +33,18 @@ Compared to the native Kubernetes horizontal pod auto-scaler, KubeScale:
 -   
 - 
 
-### High level KubeScale algorithm
+### High level KubeScale algorithm <a name="high-level"></a>
 
 The high level algorithm behind KubeScale is the following: 
 ![KubeScale algorithm](KubeScale_algo.jpg)
 
-### KubeScale email alerts
+### KubeScale email alerts <a name="prediction-alerts"></a>
 
 KubeScale sends alerts regularly 
 An example of an alert the KubeScale auto-scaler sends:
 ![KubeScale email alert](KubeScale_email_alert.jpg)
 
-### Configuration
+### Configuration explained <a name="config"></a>
 
 KubeScale is very configurable and extensive, below is the default configuration explained:
 
