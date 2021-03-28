@@ -1,4 +1,4 @@
-KubeScale
+KubeScale - A Hybrid Kubernetes Auto-Scaler for Containerised Applications
 ------------------
 
 - [Introduction](#intro)
