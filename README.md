@@ -1,11 +1,11 @@
 KubeScale
 ------------------
 
-1. [Introduction](#intro)
-2. [Why KubeScale instead of the Kubernetes HPA?](#hpa)
-3. [High level KubeScale algorithm](#high-level)
-4. [Alerts of scaling decisions with explanation](#prediction-alerts) 
-5. [Configuration explained](#config)
+- [Introduction](#intro)
+- [Why KubeScale instead of the Kubernetes HPA?](#hpa)
+- [High level KubeScale algorithm](#high-level)
+- [Alerts of scaling decisions with explanation](#prediction-alerts) 
+- [Configuration explained](#config)
 
 ### Introduction <a name="intro"></a>
 
