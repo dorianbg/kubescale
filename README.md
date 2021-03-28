@@ -3,20 +3,22 @@ KubeScale
 
 - [Introduction](#intro)
 - [Why KubeScale instead of the Kubernetes HPA?](#hpa)
-- [High level KubeScale algorithm](#high-level)
-- [Alerts of scaling decisions with explanation](#prediction-alerts) 
+- [Alerts of scaling decisions with explanation](#prediction-alerts)
 - [Configuration explained](#config)
+- [High level KubeScale algorithm](#high-level)
 
 ### Introduction <a name="intro"></a>
 
 KubeScale is a hybrid auto-scaler primarily focused on horizontally scaling containerised applications deployed on Kubernetes.
 It automatically scales deployments on Kubernetes by <b>predicting</b> the future workload and adjusting the resources beforehand.
-The workload prediction is done using a Deep auto-regressive estimator 
+The workload prediction is done using a [Deep Autoregressive Recurrent Networks](https://arxiv.org/abs/1704.04110) (implemented by GluonTS).
 
 Some of the problems solved by the KubeScale auto-scaler are:
-- how to determine when to scale up
-- how to determine when to scale down
+- how to minimise the wasting of computing resources and avoid resource over-provisioning
+- how to maximise the performance of the application and avoid resource under-provisioning
+- how to determine when to scale up and scale down
 - how much to scale the resources
+- how to anticipate rising or falling demand for computing resources
 - ...
 
 Existing metrics sources are:
@@ -30,13 +32,8 @@ You should choose metrics that are likely to present the overall workload on the
 
 Compared to the native Kubernetes horizontal pod auto-scaler, KubeScale:
 - supports Prometheus as metrics source allowing you to avoid complicated integration with the metrics server
--   
-- 
-
-### High level KubeScale algorithm <a name="high-level"></a>
-
-The high level algorithm behind KubeScale is the following: 
-![KubeScale algorithm](KubeScale_algo.jpg)
+- predicts future metric values using time-series optimised deep recurrent neural networks
+- allows greater fine tuning and control
 
 ### KubeScale email alerts <a name="prediction-alerts"></a>
 
@@ -46,17 +43,22 @@ An example of an alert the KubeScale auto-scaler sends:
 
 ### Configuration explained <a name="config"></a>
 
-KubeScale is very configurable and extensive, below is the default configuration explained:
+KubeScale is very configurable and extensive, below is the default configuration explained.
+The most important parameter for tuning is the scaling metric that is going to be used for auto-scaling and the target value for that metric.
+The target value for an auto-scaling metric presents a trade-off between resource utilisation and quality of service. 
+Targeting a lower resource usage ensures resources are sufficiently over-provisioned to reduce the likelihood that the quality of service deteriorates when there are sudden demand bursts.
 
 ```yaml
-# the location of prometheus REST API
+# namespace and service name of Prometheus - we get the REST API host/port using this information
 prometheus_namespace: cm
 prometheus_svc_name: prometheus-release-server
-# the location of the prometheus push gateway - used for storing the state of the autoscaler (ie. which mode it's running in and etc...)
+# namespace and service name of the prometheus push gateway - used for storing the state of the autoscaler
 pushgateway_namespace: cm
 pushgateway_svc_name: prometheus-release-pushgateway
-
+# email address of the person receiving the scaling events
 notification_email_receiver: abc@gmail.com
+
+# used to identify the kubernetes deployment that has to be scaled
 kubernetes:
   # name of the space in which the resource is
   namespace: default
@@ -65,29 +67,33 @@ kubernetes:
   # in case the resources pods have two containers, what is the name of one of the containers
   container: pythonwebapp
 
+# these configurations alter the behaviour of the auto-scaler
 strategy:
   # whether to scale based on reactive indications
+  # recommended to enable together with proactive mode to make the auto-scaler hybrid
   reactive_scaling_enabled: true
   # whether to scale based on proactive indications
+  # recommended to enable together with reactive mode to make the auto-scaler hybrid
   proactive_scaling_enabled: true
   # whether to down scale based on proactive indications -> usually it doesn't make sense to downscale if you expect
   # that in eg. 10 minutes the
   proactive_downscaling_enabled: false
-  # whether to only email forecasts
+  # whether to only email forecasts and not actually scale the number of instances
   proactive_mode_forecast_only: false
-  # whether to delay making proactive decision until min_train_data_history_hours of time passes
-  # useful for cases where you expect that the pattern changed so much that the potentially available
-  #  training data will be missing
+  # whether to delay making proactive decision until min_train_data_history_hours of time passes.
+  # for cases where you expect that the pattern changed so much that the there isn't enough appropriate training data
   delay_proactive_mode_by_min_train_data_history: false
-  # how often to run the control loop evaluation method, in seconds, min is 30
+  # how often to run the control loop evaluation method, in seconds, minimum is 30 due to granularity of metrics
   eval_time_interval_sec: 30
   # minimum number of instances (pods) for that deployment
   min_instances: 1
   # maximum number of instances (pods) for that deployment
   max_instances: 15
-  # how long to wait before a downscaling decision
+  # how long to wait before a downscaling decision after any scaling decision
   downscale_cooldown_period_min: 1
-  # how long to wait before a downscaling decision
+  # how long to wait before a downscaling decision after a scaling up decision.
+  # usually this is set to a higher value than 'downscale_cooldown_period_min' to avoid the reactive component
+  # interfering with the proactive component that increases the resources ahead of time (as defined with the preempt_period_min parameter)
   downscale_after_predictive_scaleup_cooldown_period_min: 3
   # the period you want to make a scaling decision for
   # eg. now you want to make a decision on what number of instances you should have in 30 seconds
@@ -96,9 +102,9 @@ strategy:
   downscale_max_percentage: 20
 
 forecasting:
-  # how often to forecast future values of the metric, in seconds (eg. 1800s = 30min)
+  # how often to forecast future values of the metric values - expensive operation due to having to train a predictive model (measured in minutes)
   forecast_creation_interval_mins: 30
-  # for how long in future to forecast
+  # for how long in future to forecast (measured in minutes). depends primarily on the type of workload and datasets
   forecast_period_mins: 60
 
 metrics:
@@ -116,10 +122,17 @@ metrics:
   max_train_data_history_hours: 8
   # resolution of metrics - ie. when getting a time-series of metrics
   # for which interval to get each of the metrics in minutes, minimal value is 1
-  # Gluon TS doesn't support less than 1 minute frequency
+  # Gluon TS models don't support less than a 1 minute frequency
   step_size_mins: 1
 
 custom_params:
   # necessary for the requests_per_second metric source to be able to get the relevant metric from the Envoy load balancer
+  # use it to similarly pass the configuration for other metric sources
   cluster_name: pythonwebapp
 ```
+
+### High level KubeScale algorithm <a name="high-level"></a>
+
+The high level algorithm behind KubeScale is the following:
+![KubeScale algorithm](KubeScale_algo.jpg)
+
