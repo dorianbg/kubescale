@@ -38,9 +38,9 @@ Compared to the native Kubernetes horizontal pod auto-scaler, KubeScale:
 
 ### KubeScale email alerts <a name="prediction-alerts"></a>
 
-KubeScale sends alerts regularly 
-An example of an alert the KubeScale auto-scaler sends:
-![KubeScale email alert](KubeScale_email_alert.jpg)
+KubeScale sends alerts regularly.  
+An example of an alert that the KubeScale auto-scaler sends:
+![KubeScale email alert](img/KubeScale_email_alert.jpg)
 
 ### Configuration explained <a name="config"></a>
 
@@ -135,5 +135,12 @@ custom_params:
 ### High level KubeScale algorithm <a name="high-level"></a>
 
 The high level algorithm behind KubeScale is the following:
-![KubeScale algorithm](KubeScale_algo.jpg)
+![KubeScale algorithm](img/KubeScale_algo.jpg)
 
+### Performance of auto-scalers
+
+Example of KubeScale and other auto-scalers in action shown through metrics produced using the related [platform for evaluation of auto-scalers](https://github.com/dorianbg/kubescale-platform):
+
+![Grafana evaluation of auto-scalers](img/Example-Grafana-Dashboard.jpg)
+
+ 
